@@ -4,7 +4,7 @@
 [server]
 adresse = "127.0.0.1:3001"                 # Apache leitet /kasse/ hierher
 basis_url = "https://ganglion.ch/kasse"     # öffentliche Adresse
-daten = "/var/lib/kasse"                    # SQLite-Datenbank
+daten = "/var/lib/rustpay"                    # SQLite-Datenbank
 admin_benutzer = "admin"
 admin_passwort = "mindestens-12-zeichen"
 # Schriften für die QR-Rechnung (SIX: Arial, Frutiger, Helvetica, Liberation Sans)
@@ -35,4 +35,4 @@ waehrung = "CHF"
 gueltig_tage = 30
 [[produkt.datei]]
 name = "Murray_Bowen_Familientherapie_in_der_klinischen_Praxis.pdf"
-pfad = "/srv/kasse/pdf/Murray_Bowen_Familientherapie_in_der_klinischen_Praxis_de.pdf"
+pfad = "/srv/rustpay/pdf/Murray_Bowen_Familientherapie_in_der_klinischen_Praxis_de.pdf"

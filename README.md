@@ -1,4 +1,4 @@
-# kasse
+# rustpay
 
 Verkauf von PDFs gegen **Schweizer QR-Rechnung**, in Rust. Zuerst für die
 deutsche Übersetzung von Murray Bowens «Familientherapie in der klinischen
@@ -25,15 +25,15 @@ camt.053/054-Auszügen (etwa über den EBICS-Client von taxtsueri).
 cargo build --release
 cargo test --release            # u.a. ganzer Ablauf Bestellung → Freigabe → Download
 cp kasse.toml.beispiel kasse.toml   # ausfüllen
-./target/release/kasse --konfig kasse.toml --pruefen
-./target/release/kasse --konfig kasse.toml
+./target/release/rustpay --konfig kasse.toml --pruefen
+./target/release/rustpay --konfig kasse.toml
 ```
 
 ## Betrieb auf ganglion.ch
 
-- Binary nach `/usr/local/bin/kasse`, Konfiguration `/etc/kasse/kasse.toml`
-  (Rechte 0640, Benutzer `kasse`), Datenbank in `/var/lib/kasse`.
-- `betrieb/kasse.service` (systemd) und `betrieb/apache-kasse.conf`
+- Binary nach `/usr/local/bin/rustpay`, Konfiguration `/etc/rustpay/kasse.toml`
+  (Rechte 0640, Benutzer `rustpay`), Datenbank in `/var/lib/rustpay`.
+- `betrieb/rustpay.service` (systemd) und `betrieb/apache-kasse.conf`
   (`ProxyPass /kasse/ http://127.0.0.1:3001/`).
 - Mail über `/usr/sbin/sendmail` (msmtp → Google-Workspace-Relay, wie das
   Kontaktformular von ganglion.ch). Der Absender muss zu einer Domain des

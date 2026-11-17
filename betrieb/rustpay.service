@@ -1,0 +1,18 @@
+# systemd: /etc/systemd/system/rustpay.service
+[Unit]
+Description=rustpay - PDF-Verkauf gegen QR-Rechnung
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/rustpay --konfig /etc/rustpay/kasse.toml
+User=rustpay
+Group=rustpay
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rustpay
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

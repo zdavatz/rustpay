@@ -941,27 +941,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kasse"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "base64 0.22.1",
- "http-body-util",
- "lettre",
- "printpdf",
- "qrcode",
- "rand",
- "rusqlite",
- "rusttype",
- "serde",
- "tokio",
- "tokio-util",
- "toml",
- "tower",
-]
-
-[[package]]
 name = "kv-log-macro"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1373,6 +1352,27 @@ dependencies = [
  "libc",
  "linux-raw-sys",
  "windows-sys",
+]
+
+[[package]]
+name = "rustpay"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64 0.22.1",
+ "http-body-util",
+ "lettre",
+ "printpdf",
+ "qrcode",
+ "rand",
+ "rusqlite",
+ "rusttype",
+ "serde",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tower",
 ]
 
 [[package]]

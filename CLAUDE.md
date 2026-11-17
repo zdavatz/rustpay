@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+rustpay (Programm `rustpay`, intern «Kasse»).
+
 Verkauf von PDFs gegen Schweizer QR-Rechnung (siehe README.md). Kommentare,
 Texte und Commit-Messages auf Deutsch, Schweizer Rechtschreibung (ss statt ß).
 

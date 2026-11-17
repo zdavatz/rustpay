@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// kasse - Verkauf von PDFs gegen Schweizer QR-Rechnung.
+// rustpay (Kasse) - Verkauf von PDFs gegen Schweizer QR-Rechnung.
 //
 // Ablauf (Wunsch des Benutzers, November 2026, zuerst für die deutsche
 // Übersetzung von Murray Bowens «Familientherapie in der klinischen Praxis»):
@@ -14,8 +14,8 @@
 //   4. Der Käufer bekommt einen Download-Link, `gueltig_tage` lang gültig;
 //      die PDFs liegen ausserhalb des Webverzeichnisses, die Kasse liefert sie.
 //
-//   kasse --konfig /pfad/kasse.toml          # Server starten
-//   kasse --konfig /pfad/kasse.toml --pruefen # nur Konfiguration prüfen
+//   rustpay --konfig /pfad/kasse.toml          # Server starten
+//   rustpay --konfig /pfad/kasse.toml --pruefen # nur Konfiguration prüfen
 //
 // Auf ganglion.ch hinter Apache: ProxyPass /kasse/ http://127.0.0.1:3001/
 
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
             "--konfig" => pfad = args.next().context("--konfig braucht einen Pfad")?,
             "--pruefen" => nur_pruefen = true,
             "-h" | "--help" => {
-                println!("kasse --konfig kasse.toml [--pruefen]");
+                println!("rustpay --konfig kasse.toml [--pruefen]");
                 return Ok(());
             }
             _ => anyhow::bail!("unbekannt: {a}"),
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {
         let lauscher = tokio::net::TcpListener::bind(&adresse).await.with_context(|| adresse.clone())?;
-        println!("kasse läuft auf {adresse}");
+        println!("rustpay läuft auf {adresse}");
         axum::serve(lauscher, router(app)).await?;
         Ok(())
     })
