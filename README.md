@@ -36,8 +36,17 @@ cp kasse.toml.beispiel kasse.toml   # ausfüllen
 - `betrieb/rustpay.service` (systemd) und `betrieb/apache-kasse.conf`
   (`ProxyPass /kasse/ http://127.0.0.1:3001/`).
 - Mail über `/usr/sbin/sendmail` (msmtp → Google-Workspace-Relay, wie das
-  Kontaktformular von ganglion.ch). Der Absender muss zu einer Domain des
-  Workspace passen.
+  Kontaktformular von ganglion.ch). Der Absender muss zur Domain dieses
+  Workspace gehören: auf ganglion.ch nur `@ganglion.ch` (in Betrieb:
+  `udavatz@ganglion.ch`). `zdavatz@ywesee.com` lehnte das Relay mit «550
+  Mail relay denied» ab, rustpay meldete das als «Broken pipe» von sendmail.
+  Vor dem Umstellen von Hand testen:
+  `printf 'Subject: t\n\nx' | /usr/sbin/sendmail -i -f <absender> -- <an>`.
+- Auf ganglion.ch: `/usr/bin/rustc` ist 1.75 und zu alt; bauen mit
+  `RUSTC=/snap/bin/rustc /snap/bin/cargo build --release`. Ohne root kein
+  `ProxyPass`: die Kasse hängt hinter `doc/kasse/index.php` (PHP-Proxy, im
+  Repository ganglion), `basis_url = "https://ganglion.ch/kasse/index.php"`.
+  Läuft im screen `rustpay`, Betriebsordner `~/rustpay-betrieb/`.
 - Schriften: auf Ubuntu `fonts-liberation` (Liberation Sans).
 
 ## Sicherheit
