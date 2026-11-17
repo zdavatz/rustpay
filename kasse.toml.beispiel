@@ -1,0 +1,38 @@
+# Vorlage: nach kasse.toml kopieren und ausfüllen. kasse.toml gehört nicht
+# ins Repository (Admin-Passwort).
+
+[server]
+adresse = "127.0.0.1:3001"                 # Apache leitet /kasse/ hierher
+basis_url = "https://ganglion.ch/kasse"     # öffentliche Adresse
+daten = "/var/lib/kasse"                    # SQLite-Datenbank
+admin_benutzer = "admin"
+admin_passwort = "mindestens-12-zeichen"
+# Schriften für die QR-Rechnung (SIX: Arial, Frutiger, Helvetica, Liberation Sans)
+schrift_normal = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+schrift_fett = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+
+[mail]
+absender = "Ursula Davatz <kasse@example.ch>"
+kopie = "verkauf@example.ch"                # erhält jede Bestellung und Freigabe (Bcc)
+sendmail = "/usr/sbin/sendmail"
+# ordner = "post"                           # statt senden als .eml ablegen (Test)
+
+[glaeubiger]
+iban = "CH93 0076 2011 6238 5295 7"         # Beispiel-IBAN; QR-IBAN wird abgewiesen
+name = "Muster GmbH"
+strasse = "Musterstrasse"
+hausnr = "1"
+plz = "8000"
+ort = "Zürich"
+uid = "CHE-123.456.789 MWST"                # optional, als Swico S1 im QR-Code
+
+[[produkt]]
+id = "bowen"
+titel = "Murray Bowen: Familientherapie in der klinischen Praxis (deutsch)"
+beschreibung = "22 Kapitel, 305 Seiten, durchsuchbares PDF mit verlinktem Inhaltsverzeichnis."
+preis = "50.00"
+waehrung = "CHF"
+gueltig_tage = 30
+[[produkt.datei]]
+name = "Murray_Bowen_Familientherapie_in_der_klinischen_Praxis.pdf"
+pfad = "/srv/kasse/pdf/Murray_Bowen_Familientherapie_in_der_klinischen_Praxis_de.pdf"

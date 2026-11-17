@@ -1,0 +1,5 @@
+/target
+# echte Konfiguration: Kontodaten und Admin-Passwort
+kasse.toml
+/daten
+/post

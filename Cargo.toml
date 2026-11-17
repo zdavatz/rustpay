@@ -1,0 +1,25 @@
+[package]
+name = "kasse"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Verkauf von PDFs gegen Schweizer QR-Rechnung: Bestellung, Rechnung per Mail, Freigabe von Hand, Download-Link"
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+base64 = "0.22"
+lettre = { version = "0.11", default-features = false, features = ["builder", "sendmail-transport"] }
+printpdf = "0.3"
+qrcode = { version = "0.14", default-features = false }
+rand = "0.8"
+rusqlite = { version = "0.32", features = ["bundled"] }
+rusttype = "0.8"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "fs", "net"] }
+tokio-util = { version = "0.7", features = ["io"] }
+toml = "0.8"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
