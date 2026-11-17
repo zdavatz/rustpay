@@ -120,6 +120,16 @@ fn esc(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;").replace('\'', "&#39;")
 }
 
+/// Text mit Leerzeilen als Absätze, einfachen Umbrüchen als <br> (die
+/// Zusammenfassungen der Vorträge enthalten Aufzählungen).
+fn absaetze(s: &str) -> String {
+    s.split("\n\n")
+        .map(str::trim)
+        .filter(|a| !a.is_empty())
+        .map(|a| format!("<p>{}</p>", a.lines().map(esc).collect::<Vec<_>>().join("<br>")))
+        .collect()
+}
+
 fn seite(titel: &str, inhalt: &str) -> Html<String> {
     Html(format!(
         "<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\">\
@@ -178,7 +188,7 @@ async fn produktseite(State(app): State<Zustand>, Path(id): Path<String>) -> Res
     seite(
         &p.titel,
         &format!(
-            "<h1>{}</h1><p>{}</p><p><strong>Preis: {}</strong></p><p>Enthalten:</p><ul>{dateien}</ul>\
+            "<h1>{}</h1>{}<p><strong>Preis: {}</strong></p><p>Enthalten:</p><ul>{dateien}</ul>\
              <div class=\"hinweis\">Sie erhalten die Rechnung mit Schweizer QR-Code per Mail. Sobald die Zahlung \
              eingegangen ist, schicken wir Ihnen einen Link zum Herunterladen ({} Tage gültig).</div>\
              <form method=\"post\" action=\"{}/p/{}\">\
@@ -187,7 +197,7 @@ async fn produktseite(State(app): State<Zustand>, Path(id): Path<String>) -> Res
              <label class=\"falle\">Webseite<input type=\"text\" name=\"webseite\" tabindex=\"-1\" autocomplete=\"off\"></label>\
              <button type=\"submit\">Rechnung anfordern</button></form>",
             esc(&p.titel),
-            esc(&p.beschreibung),
+            absaetze(&p.beschreibung),
             esc(&p.preis_text()),
             p.gueltig_tage,
             app.k.server.basis_url,
@@ -636,6 +646,12 @@ mod tests {
         assert!(app.bestand.lock().unwrap().alle().unwrap().is_empty());
         assert_eq!(holen(&app, Request::get("/p/gibtsnicht").body(Body::empty()).unwrap()).await.0, StatusCode::NOT_FOUND);
         std::fs::remove_dir_all(ordner).ok();
+    }
+
+    #[test]
+    fn absaetze_und_umbrueche() {
+        assert_eq!(absaetze("Eins\nzwei <b>\n\nDrei"), "<p>Eins<br>zwei &lt;b&gt;</p><p>Drei</p>");
+        assert_eq!(absaetze(""), "");
     }
 
     #[test]
