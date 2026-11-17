@@ -368,10 +368,19 @@ async fn download_datei(State(app): State<Zustand>, Path((s, nr)): Path<(String,
     if let Ok(g) = app.bestand.lock() {
         let _ = g.download_zaehlen(b.id);
     }
-    let name = if d.name.to_lowercase().ends_with(".pdf") { d.name.clone() } else { format!("{}.pdf", d.name) };
+    // Dateityp nach der Endung der Datei auf dem Server (ein Artikel von
+    // ganglion.ch ist ein JPG); ohne Endung im Namen die des Pfads anhängen.
+    let endung = d.pfad.extension().and_then(|e| e.to_str()).unwrap_or("pdf").to_lowercase();
+    let typ = match endung.as_str() {
+        "jpg" | "jpeg" => "image/jpeg",
+        "png" => "image/png",
+        "mp3" => "audio/mpeg",
+        _ => "application/pdf",
+    };
+    let name = if d.name.contains('.') { d.name.clone() } else { format!("{}.{endung}", d.name) };
     let koerper = Body::from_stream(tokio_util::io::ReaderStream::new(datei));
     Response::builder()
-        .header(header::CONTENT_TYPE, "application/pdf")
+        .header(header::CONTENT_TYPE, typ)
         .header(header::CONTENT_LENGTH, laenge)
         .header(
             header::CONTENT_DISPOSITION,
