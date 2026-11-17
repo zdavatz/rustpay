@@ -25,7 +25,14 @@ pub struct Brief {
 pub fn senden(k: &Mail, b: &Brief) -> Result<()> {
     let von: Mailbox = k.absender.parse().context("mail.absender")?;
     let an: Mailbox = b.an.parse().with_context(|| format!("Empfänger {:?}", b.an))?;
-    let mut m = Message::builder().from(von).to(an).subject(b.betreff.replace(['\r', '\n'], " "));
+    // Ohne Message-ID nimmt das Google-Relay die Mail an («250 OK»), Gmail
+    // stellt sie aber nie zu - weder Posteingang noch Spam (November 2026).
+    let domain = von.email.domain().to_string();
+    let mut m = Message::builder()
+        .message_id(Some(format!("<{}@{domain}>", crate::bestand::schluessel())))
+        .from(von)
+        .to(an)
+        .subject(b.betreff.replace(['\r', '\n'], " "));
     if let Some(kopie) = &k.kopie {
         m = m.bcc(kopie.parse().context("mail.kopie")?);
     }
@@ -69,6 +76,23 @@ pub fn adresse_gueltig(s: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mail_hat_message_id_und_datum() {
+        let ordner = std::env::temp_dir().join(format!("kasse-post-{}", crate::bestand::schluessel()));
+        let k = Mail {
+            absender: "Muster <verkauf@example.org>".into(),
+            kopie: None,
+            sendmail: String::new(),
+            ordner: Some(ordner.clone()),
+        };
+        senden(&k, &Brief { an: "anna@example.org".into(), betreff: "Test".into(), text: "x".into(), anhang: None }).unwrap();
+        let datei = std::fs::read_dir(&ordner).unwrap().next().unwrap().unwrap().path();
+        let roh = std::fs::read_to_string(datei).unwrap();
+        assert!(roh.lines().any(|z| z.starts_with("Message-ID: <") && z.ends_with("@example.org>")), "{roh}");
+        assert!(roh.lines().any(|z| z.starts_with("Date: ")));
+        std::fs::remove_dir_all(ordner).ok();
+    }
 
     #[test]
     fn adressen() {
