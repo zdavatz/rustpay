@@ -16,6 +16,7 @@ rand = "0.8"
 rusqlite = { version = "0.32", features = ["bundled"] }
 rusttype = "0.8"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "fs", "net"] }
 tokio-util = { version = "0.7", features = ["io"] }
 toml = "0.8"

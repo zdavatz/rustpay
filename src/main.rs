@@ -20,6 +20,7 @@
 // Auf ganglion.ch hinter Apache: ProxyPass /kasse/ http://127.0.0.1:3001/
 
 mod bestand;
+mod katalog;
 mod konfig;
 mod post;
 mod rechnung;
@@ -40,8 +41,20 @@ use konfig::{Konfig, Produkt};
 
 struct App {
     k: Konfig,
+    kataloge: Vec<katalog::Katalog>,
     bestand: Mutex<Bestand>,
     schriften: rechnung::Schriften,
+}
+
+impl App {
+    /// Produkt aus kasse.toml oder aus einem Katalog (`vortrag-123`).
+    fn produkt(&self, id: &str) -> Option<Produkt> {
+        self.k.produkt(id).cloned().or_else(|| self.kataloge.iter().find_map(|k| k.produkt(id)))
+    }
+}
+
+fn kataloge_laden(k: &Konfig) -> Result<Vec<katalog::Katalog>> {
+    k.kataloge.iter().map(|kk| katalog::Katalog::neu(kk.clone())).collect()
 }
 
 type Zustand = Arc<App>;
@@ -63,13 +76,23 @@ fn main() -> Result<()> {
     }
     let k = Konfig::laden(&pfad)?;
     let schriften = rechnung::Schriften::laden(&k.server.schrift_normal, &k.server.schrift_fett)?;
+    let kataloge = kataloge_laden(&k)?;
+    if k.leer() {
+        anyhow::bail!("weder Produkte noch Kataloge");
+    }
     if nur_pruefen {
-        println!("Konfiguration in Ordnung: {} Produkt(e), Gläubiger {}", k.produkte.len(), k.glaeubiger.name);
+        let n: Vec<String> = kataloge.iter().map(|c| format!("{} {}", c.anzahl(), c.k.praefix)).collect();
+        println!(
+            "Konfiguration in Ordnung: {} Produkt(e), Kataloge: [{}], Gläubiger {}",
+            k.produkte.len(),
+            n.join(", "),
+            k.glaeubiger.name
+        );
         return Ok(());
     }
     let bestand = Bestand::oeffnen(&k.server.daten)?;
     let adresse = k.server.adresse.clone();
-    let app = Arc::new(App { k, bestand: Mutex::new(bestand), schriften });
+    let app = Arc::new(App { k, kataloge, bestand: Mutex::new(bestand), schriften });
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {
         let lauscher = tokio::net::TcpListener::bind(&adresse).await.with_context(|| adresse.clone())?;
@@ -150,7 +173,7 @@ async fn start(State(app): State<Zustand>) -> Html<String> {
 }
 
 async fn produktseite(State(app): State<Zustand>, Path(id): Path<String>) -> Response {
-    let Some(p) = app.k.produkt(&id) else { return fehler(StatusCode::NOT_FOUND, "Dieses Angebot gibt es nicht.") };
+    let Some(p) = app.produkt(&id) else { return fehler(StatusCode::NOT_FOUND, "Dieses Angebot gibt es nicht.") };
     let dateien: String = p.dateien.iter().map(|d| format!("<li>{}</li>", esc(&d.name))).collect();
     seite(
         &p.titel,
@@ -194,7 +217,7 @@ fn rechnung_erzeugen(app: &App, p: &Produkt, b: &Bestellung) -> Result<Vec<u8>> 
 }
 
 async fn bestellen(State(app): State<Zustand>, Path(id): Path<String>, Form(f): Form<BestellFormular>) -> Response {
-    let Some(p) = app.k.produkt(&id).cloned() else { return fehler(StatusCode::NOT_FOUND, "Dieses Angebot gibt es nicht.") };
+    let Some(p) = app.produkt(&id) else { return fehler(StatusCode::NOT_FOUND, "Dieses Angebot gibt es nicht.") };
     let name = f.name.trim().to_string();
     let email = f.email.trim().to_string();
     if !f.webseite.is_empty() {
@@ -256,7 +279,7 @@ async fn rechnung_pdf(State(app): State<Zustand>, Path(s): Path<String>) -> Resp
     let app2 = app.clone();
     let erg = tokio::task::spawn_blocking(move || -> Result<Option<Vec<u8>>> {
         let Some(b) = app2.bestand.lock().map_err(|_| anyhow::anyhow!("Sperre"))?.nach_rechnung(&s)? else { return Ok(None) };
-        let p = app2.k.produkt(&b.produkt).cloned().context("Produkt nicht mehr im Angebot")?;
+        let p = app2.produkt(&b.produkt).context("Produkt nicht mehr im Angebot")?;
         Ok(Some(rechnung_erzeugen(&app2, &p, &b)?))
     })
     .await;
@@ -280,7 +303,7 @@ fn gueltige_bestellung(app: &App, s: &str) -> Result<std::result::Result<(Bestel
     if b.gueltig_bis.unwrap_or(0) < bestand::jetzt() {
         return Ok(Err("Dieser Link ist abgelaufen. Bitte melden Sie sich, wir schicken gern einen neuen."));
     }
-    let Some(p) = app.k.produkt(&b.produkt).cloned() else { return Ok(Err("Dieses Angebot gibt es nicht mehr.")) };
+    let Some(p) = app.produkt(&b.produkt) else { return Ok(Err("Dieses Angebot gibt es nicht mehr.")) };
     Ok(Ok((b, p)))
 }
 
@@ -446,7 +469,7 @@ async fn freigeben(State(app): State<Zustand>, h: HeaderMap, Path(id): Path<i64>
     let app2 = app.clone();
     let erg = tokio::task::spawn_blocking(move || -> Result<()> {
         let b0 = app2.bestand.lock().map_err(|_| anyhow::anyhow!("Sperre"))?.nach_id(id)?.context("Bestellung nicht gefunden")?;
-        let p = app2.k.produkt(&b0.produkt).cloned().context("Produkt nicht mehr im Angebot")?;
+        let p = app2.produkt(&b0.produkt).context("Produkt nicht mehr im Angebot")?;
         let b = app2.bestand.lock().map_err(|_| anyhow::anyhow!("Sperre"))?.freigeben(id, p.gueltig_tage)?;
         let link = format!("{}/d/{}", app2.k.server.basis_url, b.download_schluessel.clone().unwrap_or_default());
         post::senden(
@@ -522,7 +545,8 @@ mod tests {
         k.pruefen().unwrap();
         let schriften = rechnung::Schriften::laden(&k.server.schrift_normal, &k.server.schrift_fett).unwrap();
         let bestand = Bestand::oeffnen(&k.server.daten).unwrap();
-        (Arc::new(App { k, bestand: Mutex::new(bestand), schriften }), ordner)
+        let kataloge = kataloge_laden(&k).unwrap();
+        (Arc::new(App { k, kataloge, bestand: Mutex::new(bestand), schriften }), ordner)
     }
 
     async fn holen(app: &Zustand, req: Request<Body>) -> (StatusCode, HeaderMap, Vec<u8>) {

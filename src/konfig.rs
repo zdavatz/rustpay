@@ -16,8 +16,11 @@ pub struct Konfig {
     pub server: Server,
     pub mail: Mail,
     pub glaeubiger: Glaeubiger,
-    #[serde(rename = "produkt")]
+    #[serde(rename = "produkt", default)]
     pub produkte: Vec<Produkt>,
+    /// viele gleichartige Produkte aus einer JSON-Datei (siehe katalog.rs)
+    #[serde(rename = "katalog", default)]
+    pub kataloge: Vec<crate::katalog::KatalogKonfig>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -135,6 +138,10 @@ impl Konfig {
 
     pub fn produkt(&self, id: &str) -> Option<&Produkt> {
         self.produkte.iter().find(|p| p.id == id)
+    }
+
+    pub fn leer(&self) -> bool {
+        self.produkte.is_empty() && self.kataloge.is_empty()
     }
 }
 

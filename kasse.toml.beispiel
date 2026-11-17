@@ -36,3 +36,14 @@ gueltig_tage = 30
 [[produkt.datei]]
 name = "Murray_Bowen_Familientherapie_in_der_klinischen_Praxis.pdf"
 pfad = "/srv/rustpay/pdf/Murray_Bowen_Familientherapie_in_der_klinischen_Praxis_de.pdf"
+
+# Viele gleichartige Produkte aus einer JSON-Datei: Produkt-ID <praefix>-<nr>,
+# etwa /p/vortrag-123. Die Datei erzeugt ein Skript aus der Datenbank der
+# Webseite; sie wird neu gelesen, sobald sie sich ändert.
+[[katalog]]
+praefix = "vortrag"
+vorsatz = "Vortrag: "
+beschreibung = "Das PDF des Vortrags, mit Scan der Originalvorlage, wo vorhanden."
+preis = "10.00"
+gueltig_tage = 30
+datei = "/srv/rustpay/vortraege.json"
