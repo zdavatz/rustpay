@@ -12,7 +12,7 @@ schrift_normal = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.tt
 schrift_fett = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 
 [mail]
-absender = "Ursula Davatz <kasse@example.ch>"
+absender = "Muster GmbH <verkauf@example.ch>"
 kopie = "verkauf@example.ch"                # erhält jede Bestellung und Freigabe (Bcc)
 sendmail = "/usr/sbin/sendmail"
 # ordner = "post"                           # statt senden als .eml ablegen (Test)

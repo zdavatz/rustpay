@@ -46,7 +46,7 @@ fn schrift_fett() -> String {
 
 #[derive(Debug, Deserialize)]
 pub struct Mail {
-    /// Absender, etwa «Ursula Davatz <kasse@ganglion.ch>»
+    /// Absender, etwa «Muster GmbH <verkauf@example.ch>»
     pub absender: String,
     /// erhält jede Bestellung und jede Freigabe in Kopie (Bcc)
     pub kopie: Option<String>,
